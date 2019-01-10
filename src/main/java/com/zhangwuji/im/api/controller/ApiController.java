@@ -100,13 +100,10 @@ public class ApiController {
 			imUserGeoData.setUpdated(controllerUtil.timestamp());
 			imUserGeoDataService.save(imUserGeoData);
 		}
-
-
-
     	return geodata;
-
       // return "helloworld!";
     }
+
     
     @RequestMapping(value = "checkLogin", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
     public returnResult checkLogin(HttpServletRequest req,HttpServletResponse rsp) {
