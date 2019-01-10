@@ -9,9 +9,12 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhangwuji.im.api.common.ControllerUtil;
-import com.zhangwuji.im.api.service.IMUserService;
+import com.zhangwuji.im.api.entity.IMUserGeoData;
+import com.zhangwuji.im.api.service.IIMUserGeoDataService;
+import com.zhangwuji.im.api.service.IIMUserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
@@ -61,7 +64,11 @@ public class ApiController {
 
     @Resource
     @Qualifier(value = "imUserService")
-    private IMUserService iOnImuserService;
+    private IIMUserService iOnImuserService;
+
+	@Resource
+	@Qualifier(value = "imUserGeoDataService")
+	private IIMUserGeoDataService imUserGeoDataService;
 	
     @RequestMapping(value = "test", method = RequestMethod.GET,produces="application/json;charset=UTF-8")
     public Object test(HttpServletRequest req,HttpServletResponse rsp) {
@@ -79,6 +86,23 @@ public class ApiController {
 		for (GeoResult<RedisGeoCommands.GeoLocation<Object>> item:geoResults){
 			geodata.put(item.getContent().getName().toString(),item.getDistance().getValue());
 		}
+		//将json存到数据库埋在去
+		String geojson=JSON.toJSONString(geodata);
+
+		IMUserGeoData  imUserGeoData2=imUserGeoDataService.getOne(new QueryWrapper<IMUserGeoData>().eq("uid",6));
+		if(imUserGeoData2==null || imUserGeoData2.getUid()<=0)
+		{
+			IMUserGeoData imUserGeoData=new IMUserGeoData();
+			imUserGeoData.setId(null);
+			imUserGeoData.setUid(6);
+			imUserGeoData.setData(geojson);
+			imUserGeoData.setStatus(1);
+			imUserGeoData.setUpdated(controllerUtil.timestamp());
+			imUserGeoDataService.save(imUserGeoData);
+		}
+
+
+
     	return geodata;
 
       // return "helloworld!";

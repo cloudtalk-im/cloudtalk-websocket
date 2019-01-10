@@ -3,7 +3,7 @@ package com.zhangwuji.im.api.common;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhangwuji.im.api.entity.IMUser;
-import com.zhangwuji.im.api.service.IMUserService;
+import com.zhangwuji.im.api.service.IIMUserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +15,7 @@ public class ControllerUtil {
 
     @Resource
     @Qualifier(value = "imUserService")
-    private IMUserService iOnImuserService;
+    private IIMUserService iOnImuserService;
 
     public IMUser checkToken(HttpServletRequest req)
     {
@@ -30,6 +30,12 @@ public class ControllerUtil {
 
         IMUser user=iOnImuserService.getOne(new QueryWrapper<IMUser>().eq("appId",appId).eq("api_token",token));
         return user;
+    }
+
+    public  Long timestamp() {
+        long timeStampSec = System.currentTimeMillis()/1000;
+        String timestamp = String.format("%010d", timeStampSec);
+        return Long.parseLong(timestamp);
     }
 
 }

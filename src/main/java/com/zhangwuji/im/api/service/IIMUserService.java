@@ -15,7 +15,7 @@ import java.util.Map;
  * @author cloudtalk
  * @since 2019-01-04
  */
-public interface IMUserService extends IService<IMUser> {
+public interface IIMUserService extends IService<IMUser> {
 
     List<IMUser> findUserById(Integer id);
     List<Map<String, Object>> selectUser2();

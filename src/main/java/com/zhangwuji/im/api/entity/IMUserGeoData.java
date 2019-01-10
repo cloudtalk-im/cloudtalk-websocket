@@ -41,7 +41,7 @@ public class IMUserGeoData implements Serializable {
 
     private Integer status;
 
-    private Integer update;
+    private Long updated;
 
 
 }

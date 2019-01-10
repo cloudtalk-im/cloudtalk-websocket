@@ -1,6 +1,6 @@
 package com.zhangwuji.im.api.service;
 
-import com.zhangwuji.im.api.entity.IMUserGeoData;
+import com.zhangwuji.im.api.entity.IMUserFriends;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -9,8 +9,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * </p>
  *
  * @author cloudtalk
- * @since 2019-01-10
+ * @since 2019-01-04
  */
-public interface IIMUserGeoDataService extends IService<IMUserGeoData> {
+
+public interface IIMUserFriendsService extends IService<IMUserFriends> {
 
 }

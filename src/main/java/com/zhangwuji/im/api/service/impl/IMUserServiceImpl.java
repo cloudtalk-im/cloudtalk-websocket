@@ -3,9 +3,9 @@ package com.zhangwuji.im.api.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zhangwuji.im.api.entity.IMUser;
 import com.zhangwuji.im.api.mapper.IMUserMapper;
-import com.zhangwuji.im.api.service.IMUserService;
+import com.zhangwuji.im.api.service.IIMUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zhangwuji.im.api.service.IMUserFriendsService;
+import com.zhangwuji.im.api.service.IIMUserFriendsService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +23,11 @@ import java.util.Map;
  */
 @Service
 @Qualifier(value = "imUserService")
-public class IMUserServiceImpl extends ServiceImpl<IMUserMapper, IMUser> implements IMUserService {
+public class IMUserServiceImpl extends ServiceImpl<IMUserMapper, IMUser> implements IIMUserService {
 
     @Resource
     @Qualifier(value = "iOnImuserfriendsService")
-    private IMUserFriendsService iOnImuserfriendsService;
+    private IIMUserFriendsService iOnImuserfriendsService;
 
     @Override
     public List<IMUser> findUserById(Integer id) {
