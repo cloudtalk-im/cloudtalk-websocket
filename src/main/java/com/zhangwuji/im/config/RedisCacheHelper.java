@@ -3,6 +3,13 @@ package com.zhangwuji.im.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.connection.RedisGeoCommands;
+import org.springframework.data.redis.core.GeoOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -17,7 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class RedisCacheHelper {
 
    private  Logger logger = LoggerFactory.getLogger(getClass());
-   
+   public static final String KEY_PREFIX_VALUE = "ct:value:";
+   public static final String KEY_PREFIX_SET = "ct:set:";
+   public static final String KEY_PREFIX_LIST = "ct:list:";
+   public static final String KEY_PREFIX_HASH = "ct:hash:";
+   public static final String KEY_PREFIX_GEO = "ct:geo:";
+
    //注： 这里不能用Autowired按类型装配注入,必须用@Resource
    // StringRedisTemplate默认采用的是String的序列化策略, 
    // RedisTemplate默认采用的是JDK的序列化策略，保存的key和value都是采用此策略序列化保存的
@@ -534,5 +546,158 @@ public class RedisCacheHelper {
          logger.error("redis操作异常:",e);
          return 0;
       }
+   }
+   /**
+    *
+    * @MethodName：cacheGeo
+    * @param key
+    * @param x
+    * @param y
+    * @param member
+    * @param time(单位秒)  <=0 不过期
+    * @return
+    * @ReturnType：boolean
+    * @Description：缓存地理位置信息
+    * @Modifier：
+    * @ModifyTime：
+    */
+   public boolean cacheGeo(String k, double x, double y, String member, long time) {
+      String key = KEY_PREFIX_GEO + k;
+      try {
+         GeoOperations<String, Object> geoOps = redisTemplate.opsForGeo();
+         geoOps.geoAdd(key, new Point(x, y) , member);
+         if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+      } catch (Throwable t) {
+         logger.error("缓存[" + key +"]" + "失败, point["+ x + "," +
+                 y + "], member[" + member + "]" +", error[" + t + "]");
+      }
+      return true;
+   }
+
+   /**
+    *
+    * @MethodName：cacheGeo
+    * @param key
+    * @param locations
+    * @param time(单位秒)  <=0 不过期
+    * @return
+    * @ReturnType：boolean
+    * @Description：
+    * @Modifier：
+    * @ModifyTime：
+    */
+   public boolean cacheGeo(String k, Iterable<RedisGeoCommands.GeoLocation<String>> locations, long time) {
+      try {
+         for (RedisGeoCommands.GeoLocation<String> location : locations) {
+            cacheGeo(k, location.getPoint().getX(), location.getPoint().getY(), location.getName(), time);
+         }
+      } catch (Throwable t) {
+         logger.error("缓存[" + KEY_PREFIX_GEO + k + "]" + "失败" +", error[" + t + "]");
+      }
+      return true;
+   }
+
+   /**
+    *
+    * @MethodName：removeGeo
+    * @param key
+    * @param members
+    * @return
+    * @ReturnType：boolean
+    * @Description：移除地理位置信息
+    * @Modifier：
+    * @ModifyTime：
+    */
+   public boolean removeGeo(String k, String...members) {
+      String key = KEY_PREFIX_GEO + k;
+      try {
+         GeoOperations<String, Object> geoOps = redisTemplate.opsForGeo();
+         geoOps.geoRemove(key, members);
+      } catch (Throwable t) {
+         logger.error("移除[" + key +"]" + "失败" +", error[" + t + "]");
+      }
+      return true;
+   }
+
+   /**
+    *
+    * @MethodName：distanceGeo
+    * @param key
+    * @param member1
+    * @param member2
+    * @return Distance
+    * @ReturnType：Distance
+    * @Description：根据两个成员计算两个成员之间距离
+    * @Modifier：
+    * @ModifyTime：
+    */
+   public Distance distanceGeo(String k, String member1, String member2) {
+      String key = KEY_PREFIX_GEO + k;
+      try {
+         GeoOperations<String, Object> geoOps = redisTemplate.opsForGeo();
+         return geoOps.geoDist(key, member1, member2);
+      } catch (Throwable t) {
+         logger.error("计算距离[" + key +"]" + "失败, member[" + member1 + "," + member2 +"], error[" + t + "]");
+      }
+      return null;
+   }
+
+   /**
+    *
+    * @MethodName：getGeo
+    * @param key
+    * @param members
+    * @return
+    * @ReturnType：List<Point>
+    * @Description：根据key和member获取这些member的坐标信息
+    * @Modifier：
+    * @ModifyTime：
+    */
+   public List<Point> getGeo(String k, String...members) {
+      String key = KEY_PREFIX_GEO + k;
+      try {
+         GeoOperations<String, Object> geoOps = redisTemplate.opsForGeo();
+         return geoOps.geoPos(key, members);
+      } catch (Throwable t) {
+         logger.error("获取坐标[" + key +"]" + "失败]" + ", error[" + t + "]");
+      }
+      return null;
+   }
+
+   /**
+    *
+    * @MethodName：radiusGeo
+    * @param key
+    * @param x
+    * @param y
+    * @param distance km
+    * @return
+    * @ReturnType：GeoResults<GeoLocation<String>>
+    * @Description：通过给定的坐标和距离(km)获取范围类其它的坐标信息
+    * @Modifier：
+    * @ModifyTime：
+    */
+   public GeoResults<RedisGeoCommands.GeoLocation<Object>> radiusGeo(String key, double x, double y, double distance, Sort.Direction direction, long limit) {
+      try {
+         String k = KEY_PREFIX_GEO + key;
+
+         GeoOperations<String, Object> geoOps = redisTemplate.opsForGeo();
+
+         //设置geo查询参数
+         RedisGeoCommands.GeoRadiusCommandArgs geoRadiusArgs = RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs();
+         geoRadiusArgs = geoRadiusArgs.includeCoordinates().includeDistance();//查询返回结果包括距离和坐标
+         if (Sort.Direction.ASC.equals(direction)) {//按查询出的坐标距离中心坐标的距离进行排序
+            geoRadiusArgs.sortAscending();
+         } else if (Sort.Direction.DESC.equals(direction)) {
+            geoRadiusArgs.sortDescending();
+         }
+         geoRadiusArgs.limit(limit);//限制查询数量
+         GeoResults<RedisGeoCommands.GeoLocation<Object>> radiusGeo = geoOps.geoRadius(k, new Circle(new Point(x, y), new Distance(distance, RedisGeoCommands.DistanceUnit.METERS)), geoRadiusArgs);
+
+         return radiusGeo;
+      } catch (Throwable t) {
+         logger.error("通过坐标[" + x + "," + y +"]获取范围[" + distance + "km的其它坐标失败]" + ", error[" + t + "]");
+      }
+      return null;
    }
 }
