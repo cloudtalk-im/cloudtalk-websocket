@@ -550,7 +550,6 @@ public class RedisCacheHelper {
    /**
     *
     * @MethodName：cacheGeo
-    * @param key
     * @param x
     * @param y
     * @param member
@@ -577,7 +576,6 @@ public class RedisCacheHelper {
    /**
     *
     * @MethodName：cacheGeo
-    * @param key
     * @param locations
     * @param time(单位秒)  <=0 不过期
     * @return
@@ -600,7 +598,6 @@ public class RedisCacheHelper {
    /**
     *
     * @MethodName：removeGeo
-    * @param key
     * @param members
     * @return
     * @ReturnType：boolean
@@ -622,7 +619,6 @@ public class RedisCacheHelper {
    /**
     *
     * @MethodName：distanceGeo
-    * @param key
     * @param member1
     * @param member2
     * @return Distance
@@ -645,7 +641,6 @@ public class RedisCacheHelper {
    /**
     *
     * @MethodName：getGeo
-    * @param key
     * @param members
     * @return
     * @ReturnType：List<Point>
@@ -692,7 +687,8 @@ public class RedisCacheHelper {
             geoRadiusArgs.sortDescending();
          }
          geoRadiusArgs.limit(limit);//限制查询数量
-         GeoResults<RedisGeoCommands.GeoLocation<Object>> radiusGeo = geoOps.geoRadius(k, new Circle(new Point(x, y), new Distance(distance, RedisGeoCommands.DistanceUnit.METERS)), geoRadiusArgs);
+
+         GeoResults<RedisGeoCommands.GeoLocation<Object>> radiusGeo=geoOps.radius(k, new Circle(new Point(x, y), new Distance(distance, RedisGeoCommands.DistanceUnit.METERS)), geoRadiusArgs);
 
          return radiusGeo;
       } catch (Throwable t) {

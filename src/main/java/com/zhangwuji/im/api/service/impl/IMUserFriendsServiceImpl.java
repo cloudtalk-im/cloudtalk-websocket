@@ -1,8 +1,8 @@
 package com.zhangwuji.im.api.service.impl;
 
-import com.zhangwuji.im.api.entity.OnImuserfriends;
-import com.zhangwuji.im.api.mapper.OnImuserfriendsMapper;
-import com.zhangwuji.im.api.service.IOnImuserfriendsService;
+import com.zhangwuji.im.api.entity.IMUserFriends;
+import com.zhangwuji.im.api.mapper.IMUserFriendsMapper;
+import com.zhangwuji.im.api.service.IMUserFriendsService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -17,6 +17,6 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Qualifier(value = "iOnImuserfriendsService")
-public class OnImuserfriendsServiceImpl extends ServiceImpl<OnImuserfriendsMapper, OnImuserfriends> implements IOnImuserfriendsService {
+public class IMUserFriendsServiceImpl extends ServiceImpl<IMUserFriendsMapper, IMUserFriends> implements IMUserFriendsService {
 
 }

@@ -91,16 +91,18 @@ public class CodeGenerator {
 
         // 策略配置
         StrategyConfig strategy = new StrategyConfig();
+        strategy.setTablePrefix(new String[]{"on_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);
+      //  strategy.setNaming(NamingStrategy.removePrefixAndCamel("on_IMUserGeoData",new String[]{"on_IMUserGeoData"}));// 表名生成策略
+        strategy.setInclude(new String[]{"on_IMUserGeoData"}); // 需要生成的表
+
+
         strategy.setColumnNaming(NamingStrategy.underline_to_camel);
 //        strategy.setSuperEntityClass("com.baomidou.ant.common.BaseEntity");
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(true);
-//        strategy.setSuperControllerClass("com.baomidou.ant.common.BaseController");
-        strategy.setInclude("on_IMUser");//表名
-//        strategy.setSuperEntityColumns("id");
         strategy.setControllerMappingHyphenStyle(true);
-        strategy.setTablePrefix(pc.getModuleName() + "_");
+      //  strategy.setTablePrefix(pc.getModuleName() + "_");
         mpg.setStrategy(strategy);
         mpg.setTemplateEngine(new FreemarkerTemplateEngine());
         mpg.execute();

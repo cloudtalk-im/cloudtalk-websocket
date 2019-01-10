@@ -1,6 +1,6 @@
 package com.zhangwuji.im.api.mapper;
 
-import com.zhangwuji.im.api.entity.OnImuser;
+import com.zhangwuji.im.api.entity.IMUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Component
 @Qualifier("onImuserMapper")
-public interface OnImuserMapper extends BaseMapper<OnImuser>
+public interface IMUserMapper extends BaseMapper<IMUser>
 {
 
     List<Map<String, Object>> selectUser2();
@@ -50,10 +50,10 @@ public interface OnImuserMapper extends BaseMapper<OnImuser>
             @Result(column="updated",property="updated")
     })
 
-    List<OnImuser> findUserById(Integer id);
+    List<IMUser> findUserById(Integer id);
 
     @Select("select * from on_IMUser ")
-    List<OnImuser> getAllUserBypage(Page page);
+    List<IMUser> getAllUserBypage(Page page);
 
 
     List<Map<String, Object>> getUsersInfo(String[] array);

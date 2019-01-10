@@ -2,8 +2,8 @@ package com.zhangwuji.im.api.common;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.zhangwuji.im.api.entity.OnImuser;
-import com.zhangwuji.im.api.service.IOnImuserService;
+import com.zhangwuji.im.api.entity.IMUser;
+import com.zhangwuji.im.api.service.IMUserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +15,9 @@ public class ControllerUtil {
 
     @Resource
     @Qualifier(value = "imUserService")
-    private IOnImuserService iOnImuserService;
+    private IMUserService iOnImuserService;
 
-    public OnImuser checkToken(HttpServletRequest req)
+    public IMUser checkToken(HttpServletRequest req)
     {
         String appId=req.getHeader("appid");
         String token=req.getHeader("token");
@@ -28,7 +28,7 @@ public class ControllerUtil {
         }
         if(token==null|| token=="")return null;
 
-        OnImuser user=iOnImuserService.getOne(new QueryWrapper<OnImuser>().eq("appId",appId).eq("api_token",token));
+        IMUser user=iOnImuserService.getOne(new QueryWrapper<IMUser>().eq("appId",appId).eq("api_token",token));
         return user;
     }
 

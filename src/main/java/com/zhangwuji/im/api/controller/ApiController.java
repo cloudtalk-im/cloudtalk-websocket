@@ -11,16 +11,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhangwuji.im.api.common.ControllerUtil;
-import com.zhangwuji.im.api.result.userinfoVo;
-import com.zhangwuji.im.api.service.IOnImuserService;
+import com.zhangwuji.im.api.service.IMUserService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.zhangwuji.im.api.common.JavaBeanUtil;
-import com.zhangwuji.im.api.entity.OnImuser;
+import com.zhangwuji.im.api.entity.IMUser;
 import com.zhangwuji.im.api.entity.ServerInfoEntity;
 import com.zhangwuji.im.api.result.returnResult;
 import com.zhangwuji.im.config.RedisCacheHelper;
@@ -58,12 +61,27 @@ public class ApiController {
 
     @Resource
     @Qualifier(value = "imUserService")
-    private IOnImuserService iOnImuserService;
+    private IMUserService iOnImuserService;
 	
     @RequestMapping(value = "test", method = RequestMethod.GET,produces="application/json;charset=UTF-8")
-    public String test(HttpServletRequest req,HttpServletResponse rsp) {
+    public Object test(HttpServletRequest req,HttpServletResponse rsp) {
     	rsp.addHeader("Access-Control-Allow-Origin", "*");
-       return "helloworld!";
+		Map<String, Double> geodata=new HashMap<>();
+
+    	redisHelper.cacheGeo("hunan22",122.172565,37.419147,"1",13600*10);
+		redisHelper.cacheGeo("hunan22",122.172565,37.417147,"2",13600*10);
+		redisHelper.cacheGeo("hunan22",122.172565,37.415147,"3",13600*10);
+		redisHelper.cacheGeo("hunan22",122.172565,37.416147,"4",13600*10);
+
+		GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResults=redisHelper.radiusGeo("hunan22",122.172565,37.419147,1000, Sort.Direction.ASC,10);
+
+		List<GeoResult<RedisGeoCommands.GeoLocation<Object>>> geoResults1= geoResults.getContent();
+		for (GeoResult<RedisGeoCommands.GeoLocation<Object>> item:geoResults){
+			geodata.put(item.getContent().getName().toString(),item.getDistance().getValue());
+		}
+    	return geodata;
+
+      // return "helloworld!";
     }
     
     @RequestMapping(value = "checkLogin", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
@@ -78,7 +96,7 @@ public class ApiController {
 		String username=req.getParameter("username");
 		String password=req.getParameter("password");
 
-		OnImuser users=iOnImuserService.getOne(new QueryWrapper<OnImuser>().eq("appId",appid).eq("username",username));
+		IMUser users=iOnImuserService.getOne(new QueryWrapper<IMUser>().eq("appId",appid).eq("username",username));
 		if(users==null || users.getId()==0)
 		{
 			returnResult.setCode(returnResult.ERROR);
@@ -138,7 +156,7 @@ public class ApiController {
 		returnResult returnResult=new returnResult();
 		Map<String, Object> returnData=new HashMap<>();
 
-		OnImuser myinfo=controllerUtil.checkToken(req);
+		IMUser myinfo=controllerUtil.checkToken(req);
 		if(myinfo==null)
 		{
 			returnResult.setCode(returnResult.ERROR);
@@ -199,9 +217,9 @@ public class ApiController {
 	@RequestMapping("/users/{page}/{size}")
 	public Map<String, Object> users(@PathVariable Integer page, @PathVariable Integer size) {
 		Map<String, Object> map = new HashMap<>();
-		Page<OnImuser> questionStudent = iOnImuserService.getAllUserBypage(new Page<>(page, size));
+		Page<IMUser> questionStudent = iOnImuserService.getAllUserBypage(new Page<>(page, size));
 
-		OnImuser users=iOnImuserService.getById(1);
+		IMUser users=iOnImuserService.getById(1);
 
 		List<Map<String, Object>> list=iOnImuserService.selectUser2();
 

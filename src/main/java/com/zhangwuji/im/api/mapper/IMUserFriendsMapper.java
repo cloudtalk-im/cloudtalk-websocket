@@ -1,6 +1,6 @@
 package com.zhangwuji.im.api.mapper;
 
-import com.zhangwuji.im.api.entity.OnImuserfriends;
+import com.zhangwuji.im.api.entity.IMUserFriends;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author cloudtalk
  * @since 2019-01-04
  */
-public interface OnImuserfriendsMapper extends BaseMapper<OnImuserfriends> {
+public interface IMUserFriendsMapper extends BaseMapper<IMUserFriends> {
 
 }

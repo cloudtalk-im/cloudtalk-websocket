@@ -1,7 +1,7 @@
 package com.zhangwuji.im.api.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.zhangwuji.im.api.entity.OnImuser;
+import com.zhangwuji.im.api.entity.IMUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -15,11 +15,11 @@ import java.util.Map;
  * @author cloudtalk
  * @since 2019-01-04
  */
-public interface IOnImuserService extends IService<OnImuser> {
+public interface IMUserService extends IService<IMUser> {
 
-    List<OnImuser> findUserById(Integer id);
+    List<IMUser> findUserById(Integer id);
     List<Map<String, Object>> selectUser2();
-    Page<OnImuser> getAllUserBypage(Page<OnImuser> page);
+    Page<IMUser> getAllUserBypage(Page<IMUser> page);
     List<Map<String, Object>> getUsersInfo(String ids);
 
 }

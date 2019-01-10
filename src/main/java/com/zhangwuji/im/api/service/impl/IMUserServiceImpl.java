@@ -1,12 +1,11 @@
 package com.zhangwuji.im.api.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.zhangwuji.im.api.entity.OnImuser;
-import com.zhangwuji.im.api.mapper.OnImuserMapper;
-import com.zhangwuji.im.api.service.IOnImuserService;
+import com.zhangwuji.im.api.entity.IMUser;
+import com.zhangwuji.im.api.mapper.IMUserMapper;
+import com.zhangwuji.im.api.service.IMUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zhangwuji.im.api.service.IOnImuserfriendsService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.zhangwuji.im.api.service.IMUserFriendsService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +23,14 @@ import java.util.Map;
  */
 @Service
 @Qualifier(value = "imUserService")
-public class OnImuserServiceImpl extends ServiceImpl<OnImuserMapper, OnImuser> implements IOnImuserService {
+public class IMUserServiceImpl extends ServiceImpl<IMUserMapper, IMUser> implements IMUserService {
 
     @Resource
     @Qualifier(value = "iOnImuserfriendsService")
-    private IOnImuserfriendsService iOnImuserfriendsService;
+    private IMUserFriendsService iOnImuserfriendsService;
 
     @Override
-    public List<OnImuser> findUserById(Integer id) {
+    public List<IMUser> findUserById(Integer id) {
         // TODO Auto-generated method stub
         return baseMapper.findUserById(id);
     }
@@ -43,7 +42,7 @@ public class OnImuserServiceImpl extends ServiceImpl<OnImuserMapper, OnImuser> i
     }
 
     @Override
-    public Page<OnImuser> getAllUserBypage(Page<OnImuser> page) {
+    public Page<IMUser> getAllUserBypage(Page<IMUser> page) {
         return page.setRecords(this.baseMapper.getAllUserBypage(page));
     }
 

@@ -22,7 +22,7 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("on_IMUser")
-public class OnImuser extends baseEntity implements Serializable {
+public class IMUser extends baseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
