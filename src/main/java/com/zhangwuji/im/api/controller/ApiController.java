@@ -80,8 +80,19 @@ public class ApiController {
 		redisHelper.cacheGeo("hunan22",122.172565,37.415147,"3",13600*10);
 		redisHelper.cacheGeo("hunan22",122.172565,37.416147,"4",13600*10);
 
-		GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResults=redisHelper.radiusGeo("hunan22",122.172565,37.419147,1000, Sort.Direction.ASC,10);
+		IMUserGeoData  imUserGeoData2=imUserGeoDataService.getOne(new QueryWrapper<IMUserGeoData>().eq("uid",6));
 
+		if(imUserGeoData2!=null && imUserGeoData2.getId()>0 && imUserGeoData2.getLat()>0 && imUserGeoData2.getUpdated()>0 && ((controllerUtil.timestamp()-imUserGeoData2.getUpdated())<60*10))
+		{
+
+		}
+		else
+		{
+
+		}
+
+
+		GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResults=redisHelper.radiusGeo("hunan22",122.172565,37.419147,1000, Sort.Direction.ASC,10);
 		List<GeoResult<RedisGeoCommands.GeoLocation<Object>>> geoResults1= geoResults.getContent();
 		for (GeoResult<RedisGeoCommands.GeoLocation<Object>> item:geoResults){
 			geodata.put(item.getContent().getName().toString(),item.getDistance().getValue());
@@ -89,7 +100,7 @@ public class ApiController {
 		//将json存到数据库埋在去
 		String geojson=JSON.toJSONString(geodata);
 
-		IMUserGeoData  imUserGeoData2=imUserGeoDataService.getOne(new QueryWrapper<IMUserGeoData>().eq("uid",6));
+
 		if(imUserGeoData2==null || imUserGeoData2.getUid()<=0)
 		{
 			IMUserGeoData imUserGeoData=new IMUserGeoData();
