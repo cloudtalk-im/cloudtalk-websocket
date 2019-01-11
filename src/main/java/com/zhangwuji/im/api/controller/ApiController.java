@@ -2,6 +2,7 @@ package com.zhangwuji.im.api.controller;
 
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,11 +11,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhangwuji.im.api.common.ControllerUtil;
+import com.zhangwuji.im.api.entity.GeoBean;
 import com.zhangwuji.im.api.entity.IMUserGeoData;
 import com.zhangwuji.im.api.service.IIMUserGeoDataService;
 import com.zhangwuji.im.api.service.IIMUserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
@@ -73,47 +77,107 @@ public class ApiController {
     @RequestMapping(value = "test", method = RequestMethod.GET,produces="application/json;charset=UTF-8")
     public Object test(HttpServletRequest req,HttpServletResponse rsp) {
     	rsp.addHeader("Access-Control-Allow-Origin", "*");
+
+        return "helloworld!";
+    }
+
+
+	@RequestMapping(value = "getNearByUser", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public returnResult getNearByUser(HttpServletRequest req,HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		returnResult returnResult=new returnResult();
+		Map<String, Object> returnData=new HashMap<>();
 		Map<String, Double> geodata=new HashMap<>();
 
-    	redisHelper.cacheGeo("hunan22",122.172565,37.419147,"1",13600*10);
+
+		IMUser myinfo=controllerUtil.checkToken(req);
+		if(myinfo==null)
+		{
+			returnResult.setCode(returnResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+
+		int page=controllerUtil.getIntParameter(req,"page",1);
+		int pagesize=controllerUtil.getIntParameter(req,"pagesize",20);
+		double lng=controllerUtil.getDoubleParameter(req,"lng",0);
+		double lat=controllerUtil.getDoubleParameter(req,"lat",0);
+
+
+		List<GeoBean> geoBeanList = new LinkedList<>();
+		List<GeoBean> pageGeoList = new LinkedList<>();
+
+		redisHelper.cacheGeo("hunan22",122.172565,37.419147,"1",13600*10);
 		redisHelper.cacheGeo("hunan22",122.172565,37.417147,"2",13600*10);
 		redisHelper.cacheGeo("hunan22",122.172565,37.415147,"3",13600*10);
 		redisHelper.cacheGeo("hunan22",122.172565,37.416147,"4",13600*10);
+		String geojson="";
 
-		IMUserGeoData  imUserGeoData2=imUserGeoDataService.getOne(new QueryWrapper<IMUserGeoData>().eq("uid",6));
 
-		if(imUserGeoData2!=null && imUserGeoData2.getId()>0 && imUserGeoData2.getLat()>0 && imUserGeoData2.getUpdated()>0 && ((controllerUtil.timestamp()-imUserGeoData2.getUpdated())<60*10))
+		//流程:先从数据库查找缓存。看有没有缓存数据，如果有的话，直接读取缓存数据进行查分页查找。没有缓存数据时，用redis geo里面进行搜索
+		IMUserGeoData  imUserGeoData2=imUserGeoDataService.getOne(new QueryWrapper<IMUserGeoData>().eq("uid",myinfo.getId()));
+		if(imUserGeoData2!=null && imUserGeoData2.getId()>0 && imUserGeoData2.getUpdated()>0 && ((controllerUtil.timestamp()-imUserGeoData2.getUpdated())<60*10))
 		{
-
+			geojson=imUserGeoData2.getData();
+			geoBeanList=JSON.parseArray(geojson,GeoBean.class);
 		}
 		else
 		{
-
+			GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResults=redisHelper.radiusGeo("hunan22",lng,lat,1000, Sort.Direction.ASC,100);
+			List<GeoResult<RedisGeoCommands.GeoLocation<Object>>> geoResults1= geoResults.getContent();
+			for (GeoResult<RedisGeoCommands.GeoLocation<Object>> item:geoResults){
+				GeoBean geoBean=new GeoBean();
+				geoBean.setDis(item.getDistance().getValue());
+				geoBean.setKey(item.getContent().getName().toString());
+				geoBeanList.add(geoBean);
+			}
+			//将json存到数据库埋在去
+			geojson=JSON.toJSONString(geoBeanList);
 		}
-
-
-		GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResults=redisHelper.radiusGeo("hunan22",122.172565,37.419147,1000, Sort.Direction.ASC,10);
-		List<GeoResult<RedisGeoCommands.GeoLocation<Object>>> geoResults1= geoResults.getContent();
-		for (GeoResult<RedisGeoCommands.GeoLocation<Object>> item:geoResults){
-			geodata.put(item.getContent().getName().toString(),item.getDistance().getValue());
-		}
-		//将json存到数据库埋在去
-		String geojson=JSON.toJSONString(geodata);
-
 
 		if(imUserGeoData2==null || imUserGeoData2.getUid()<=0)
 		{
 			IMUserGeoData imUserGeoData=new IMUserGeoData();
 			imUserGeoData.setId(null);
-			imUserGeoData.setUid(6);
+			imUserGeoData.setUid(myinfo.getId());
 			imUserGeoData.setData(geojson);
 			imUserGeoData.setStatus(1);
+			imUserGeoData.setLat(lat);
+			imUserGeoData.setLng(lng);
+
 			imUserGeoData.setUpdated(controllerUtil.timestamp());
 			imUserGeoDataService.save(imUserGeoData);
 		}
-    	return geodata;
-      // return "helloworld!";
-    }
+
+		pageGeoList=javaBeanUtil.sublist(geoBeanList,page,pagesize);
+        List<String> userids = new LinkedList<>();
+		for (GeoBean geoBean:pageGeoList) {
+			userids.add(geoBean.getKey());
+		}
+
+		String uids = StringUtils.join(userids, ",");
+		List<Map<String, Object>> userslist=iOnImuserService.getUsersInfo(uids);
+
+
+		//哈哈。连环for。主要是为了排序和输出dists
+		List<Map<String, Object>> returndatalist=new LinkedList<>();
+		for (GeoBean geoBean:pageGeoList) {
+			for (Map<String, Object> map:userslist) {
+				if(geoBean.getKey().equals(map.get("id").toString()))
+				{
+					map.put("dists",geoBean.getDis());
+					returndatalist.add(map);
+					break;
+				}
+			}
+		}
+
+		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setData(returndatalist);
+		returnResult.setMessage("查询成功!");
+		return returnResult;
+	}
 
     
     @RequestMapping(value = "checkLogin", method = RequestMethod.POST,produces="application/json;charset=UTF-8")

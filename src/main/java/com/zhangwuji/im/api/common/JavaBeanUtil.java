@@ -9,10 +9,23 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
 
+import com.zhangwuji.im.api.entity.GeoBean;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JavaBeanUtil {
+
+    public List<GeoBean> sublist(List<GeoBean> clubs,int pageIndex,int pageSize)
+    {
+        List<GeoBean> geoBeanList =new LinkedList<>();
+        int currIdx = (pageIndex > 1 ? (pageIndex -1) * pageSize : 0);
+        for (int i = 0; i < pageSize && i < clubs.size() - currIdx; i++) {
+            GeoBean geoBean = clubs.get(currIdx + i);
+            geoBeanList.add(geoBean);
+        }
+        return  geoBeanList;
+    }
+
     /**
      * 使用 Map按value进行排序
      *

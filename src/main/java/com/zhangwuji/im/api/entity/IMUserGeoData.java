@@ -31,9 +31,9 @@ public class IMUserGeoData implements Serializable {
 
     private String city;
 
-    private Float lng;
+    private Double lng;
 
-    private Float lat;
+    private Double lat;
 
     private String uids;
 

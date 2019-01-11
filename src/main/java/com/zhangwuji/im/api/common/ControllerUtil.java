@@ -17,6 +17,43 @@ public class ControllerUtil {
     @Qualifier(value = "imUserService")
     private IIMUserService iOnImuserService;
 
+    public int getIntParameter(HttpServletRequest req,String key,int def)
+    {
+        String value=req.getParameter(key);
+        if(value!=null && value!="")
+        {
+            return Integer.parseInt(value);
+        }
+        else
+        {
+            return def;
+        }
+    }
+    public double getDoubleParameter(HttpServletRequest req,String key,double def)
+    {
+        String value=req.getParameter(key);
+        if(value!=null && value!="")
+        {
+            return Double.parseDouble(value);
+        }
+        else
+        {
+            return def;
+        }
+    }
+    public String getStringParameter(HttpServletRequest req,String key,String def)
+    {
+        String value=req.getParameter(key);
+        if(value!=null && value!="")
+        {
+            return value;
+        }
+        else
+        {
+            return def;
+        }
+    }
+
     public IMUser checkToken(HttpServletRequest req)
     {
         String appId=req.getHeader("appid");

@@ -30,7 +30,7 @@ public class IMUser extends baseEntity implements Serializable {
      * 用户id
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private Integer id;
 
 
     @TableField("appId")
