@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhangwuji.im.api.common.ControllerUtil;
 import com.zhangwuji.im.api.entity.*;
@@ -31,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.zhangwuji.im.api.common.JavaBeanUtil;
-import com.zhangwuji.im.api.result.returnResult;
+import com.zhangwuji.im.api.result.ApiResult;
 import com.zhangwuji.im.config.RedisCacheHelper;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -91,9 +90,9 @@ public class ApiController {
         return "helloworld!";
     }
 	@RequestMapping(value = "getGroupList", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
-	public returnResult getGroupList(HttpServletRequest req,HttpServletResponse rsp) {
+	public ApiResult getGroupList(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
-		returnResult returnResult = new returnResult();
+		ApiResult returnResult = new ApiResult();
 		Map<String, Object> returnData = new HashMap<>();
 		List<Map<String, Object>> returnGrouplist = new LinkedList<>();
 		IMUser myinfo = controllerUtil.checkToken(req);
@@ -140,9 +139,9 @@ public class ApiController {
 	}
 
 	@RequestMapping(value = "getGroupInfo", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
-	public returnResult getGroupInfo(HttpServletRequest req,HttpServletResponse rsp) {
+	public ApiResult getGroupInfo(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
-		returnResult returnResult = new returnResult();
+		ApiResult returnResult = new ApiResult();
 		Map<String, Object> returnData = new HashMap<>();
 		List<Map<String, Object>> returnGrouplist = new LinkedList<>();
 		IMUser myinfo = controllerUtil.checkToken(req);
@@ -185,9 +184,9 @@ public class ApiController {
 	}
 
 	@RequestMapping(value = "getChatRoomList", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
-	public returnResult getChatRoomList(HttpServletRequest req,HttpServletResponse rsp) {
+	public ApiResult getChatRoomList(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
-		returnResult returnResult = new returnResult();
+		ApiResult returnResult = new ApiResult();
 		Map<String, Object> returnData = new HashMap<>();
 		Map<String, Double> geodata = new HashMap<>();
 		IMUser myinfo=controllerUtil.checkToken(req);
@@ -212,9 +211,9 @@ public class ApiController {
 
 
 	@RequestMapping(value = "getNearByUser", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
-	public returnResult getNearByUser(HttpServletRequest req,HttpServletResponse rsp) {
+	public ApiResult getNearByUser(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
-		returnResult returnResult=new returnResult();
+		ApiResult returnResult=new ApiResult();
 		Map<String, Object> returnData=new HashMap<>();
 		Map<String, Double> geodata=new HashMap<>();
 
@@ -312,9 +311,9 @@ public class ApiController {
 
     
     @RequestMapping(value = "checkLogin", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
-    public returnResult checkLogin(HttpServletRequest req,HttpServletResponse rsp) {
+    public ApiResult checkLogin(HttpServletRequest req, HttpServletResponse rsp) {
     	rsp.addHeader("Access-Control-Allow-Origin", "*");
-    	returnResult returnResult=new returnResult();
+    	ApiResult returnResult=new ApiResult();
     	Map<String, Object> returnData=new HashMap<>();
 		ServerInfoEntity serverinfo=new ServerInfoEntity();
 		Map<String, Object> bmqq_plugin=new HashMap<>();
@@ -378,9 +377,9 @@ public class ApiController {
     }
 
 	@RequestMapping(value = "getUserInfo", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
-	public returnResult getUserInfo(HttpServletRequest req,HttpServletResponse rsp) {
+	public ApiResult getUserInfo(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
-		returnResult returnResult=new returnResult();
+		ApiResult returnResult=new ApiResult();
 		Map<String, Object> returnData=new HashMap<>();
 
 		IMUser myinfo=controllerUtil.checkToken(req);
@@ -412,9 +411,9 @@ public class ApiController {
 	}
 
     @RequestMapping(value = "getSrvInfo", method = RequestMethod.GET,produces="application/json;charset=UTF-8")
-    public returnResult getSrvInfo(HttpServletRequest req,HttpServletResponse rsp) {
+    public ApiResult getSrvInfo(HttpServletRequest req, HttpServletResponse rsp) {
     	rsp.addHeader("Access-Control-Allow-Origin", "*");
-    	returnResult returnResult=new returnResult();
+    	ApiResult returnResult=new ApiResult();
     	Map<String, Object> returnData=new HashMap<>();
 		ServerInfoEntity serverinfo=new ServerInfoEntity();
 		

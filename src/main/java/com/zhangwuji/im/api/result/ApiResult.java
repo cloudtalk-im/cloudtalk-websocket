@@ -3,7 +3,7 @@ package com.zhangwuji.im.api.result;
 import lombok.Data;
 
 @Data
-public class returnResult {
+public class ApiResult {
 	    public static final int SUCCESS = 200;
 	    public static final int ERROR = 100;
 	    
