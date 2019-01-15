@@ -94,7 +94,7 @@ public class CodeGenerator {
         strategy.setTablePrefix(new String[]{"on_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);
       //  strategy.setNaming(NamingStrategy.removePrefixAndCamel("on_IMUserGeoData",new String[]{"on_IMUserGeoData"}));// 表名生成策略
-        strategy.setInclude(new String[]{"on_IMUserGeoData"}); // 需要生成的表
+        strategy.setInclude(new String[]{"on_IMGroupMember"}); // 需要生成的表
 
 
         strategy.setColumnNaming(NamingStrategy.underline_to_camel);

@@ -14,8 +14,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhangwuji.im.api.common.ControllerUtil;
-import com.zhangwuji.im.api.entity.GeoBean;
-import com.zhangwuji.im.api.entity.IMUserGeoData;
+import com.zhangwuji.im.api.entity.*;
+import com.zhangwuji.im.api.service.IIMGroupMemberService;
+import com.zhangwuji.im.api.service.IIMGroupService;
 import com.zhangwuji.im.api.service.IIMUserGeoDataService;
 import com.zhangwuji.im.api.service.IIMUserService;
 import org.apache.commons.lang3.StringUtils;
@@ -30,8 +31,6 @@ import org.springframework.web.bind.annotation.*;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.zhangwuji.im.api.common.JavaBeanUtil;
-import com.zhangwuji.im.api.entity.IMUser;
-import com.zhangwuji.im.api.entity.ServerInfoEntity;
 import com.zhangwuji.im.api.result.returnResult;
 import com.zhangwuji.im.config.RedisCacheHelper;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -73,6 +72,17 @@ public class ApiController {
 	@Resource
 	@Qualifier(value = "imUserGeoDataService")
 	private IIMUserGeoDataService imUserGeoDataService;
+
+
+	@Resource
+	@Qualifier(value = "IMGroupService")
+	private IIMGroupService iimGroupService;
+
+	@Resource
+	@Qualifier(value = "IMGroupMemberService")
+	private IIMGroupMemberService iimGroupMemberService;
+
+
 	
     @RequestMapping(value = "test", method = RequestMethod.GET,produces="application/json;charset=UTF-8")
     public Object test(HttpServletRequest req,HttpServletResponse rsp) {
@@ -80,6 +90,125 @@ public class ApiController {
 
         return "helloworld!";
     }
+	@RequestMapping(value = "getGroupList", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public returnResult getGroupList(HttpServletRequest req,HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		returnResult returnResult = new returnResult();
+		Map<String, Object> returnData = new HashMap<>();
+		List<Map<String, Object>> returnGrouplist = new LinkedList<>();
+		IMUser myinfo = controllerUtil.checkToken(req);
+
+		if (myinfo == null) {
+			returnResult.setCode(returnResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+
+		//群信息列表。
+		List<Map<String, Object>> grouplist=iimGroupService.getMyGroupList(myinfo.getId());
+		List<String> ids=new LinkedList<>();
+		for (Map<String, Object> gmap:grouplist) {
+			if(Integer.parseInt(gmap.get("type").toString())<3) {
+				ids.add(gmap.get("id").toString());
+			}
+		}
+
+		List<Map<String, Object>> groupmemberlist=iimGroupMemberService.getGroupMemberList(StringUtils.join(ids, ","));
+
+		if(grouplist!=null && grouplist.size()>0)
+		{
+			for (Map<String, Object> gmap:grouplist) {
+				List<String> uids=new LinkedList<>();
+				if(groupmemberlist!=null && groupmemberlist.size()>0) {
+					for (Map<String, Object> umap : groupmemberlist) {
+						if (gmap.get("id").toString().equals(umap.get("groupId").toString())) {
+							uids.add(umap.get("userId").toString());
+						}
+					}
+				}
+				gmap.put("userlist", StringUtils.join(uids, ","));
+				returnGrouplist.add(gmap);
+			}
+		}
+
+		returnData.put("grouplist",returnGrouplist);
+		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setData(returnData);
+		returnResult.setMessage("查询成功!");
+		return  returnResult;
+	}
+
+	@RequestMapping(value = "getGroupInfo", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public returnResult getGroupInfo(HttpServletRequest req,HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		returnResult returnResult = new returnResult();
+		Map<String, Object> returnData = new HashMap<>();
+		List<Map<String, Object>> returnGrouplist = new LinkedList<>();
+		IMUser myinfo = controllerUtil.checkToken(req);
+
+
+		if (myinfo == null) {
+			returnResult.setCode(returnResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+
+
+		String groupIds=controllerUtil.getStringParameter(req,"groupIds","");
+
+		//群信息列表。
+		List<Map<String, Object>>  grouplist=iimGroupService.getGroupList(groupIds);
+		List<Map<String, Object>>  groupmemberlist=iimGroupMemberService.getGroupMemberList(groupIds);
+		if(grouplist!=null && grouplist.size()>0)
+		{
+			for (Map<String, Object> gmap:grouplist) {
+				List<String> uids=new LinkedList<>();
+				if(groupmemberlist!=null && groupmemberlist.size()>0) {
+					for (Map<String, Object> umap : groupmemberlist) {
+						if (gmap.get("id").toString().equals(umap.get("groupId").toString())) {
+							uids.add(umap.get("userId").toString());
+						}
+					}
+				}
+				gmap.put("userlist", StringUtils.join(uids, ","));
+				returnGrouplist.add(gmap);
+			}
+		}
+
+		returnData.put("grouplist",returnGrouplist);
+		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setData(returnData);
+		returnResult.setMessage("查询成功!");
+		return  returnResult;
+	}
+
+	@RequestMapping(value = "getChatRoomList", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public returnResult getChatRoomList(HttpServletRequest req,HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		returnResult returnResult = new returnResult();
+		Map<String, Object> returnData = new HashMap<>();
+		Map<String, Double> geodata = new HashMap<>();
+		IMUser myinfo=controllerUtil.checkToken(req);
+		if(myinfo==null)
+		{
+			returnResult.setCode(returnResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+
+
+
+		Map<String, Object>  groups=iimGroupService.getMap(new QueryWrapper<IMGroup>().eq("type",3).eq("status",0));
+		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setData(groups);
+		returnResult.setMessage("查询成功!");
+		return  returnResult;
+	}
+
+
 
 
 	@RequestMapping(value = "getNearByUser", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
@@ -153,7 +282,9 @@ public class ApiController {
 		pageGeoList=javaBeanUtil.sublist(geoBeanList,page,pagesize);
         List<String> userids = new LinkedList<>();
 		for (GeoBean geoBean:pageGeoList) {
-			userids.add(geoBean.getKey());
+			if(!geoBean.getKey().equals(myinfo.getId())) {//把自已排除
+				userids.add(geoBean.getKey());
+			}
 		}
 
 		String uids = StringUtils.join(userids, ",");
