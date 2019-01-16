@@ -25,4 +25,9 @@ public class IMGroupMemberServiceImpl extends ServiceImpl<IMGroupMemberMapper, I
     public List<Map<String, Object>> getGroupMemberList(String ids) {
         return baseMapper.getGroupMemberList(ids.split("\\,"));
     }
+
+    @Override
+    public List<Map<String, Object>> getGroupMemberInfoById(Integer id) {
+        return baseMapper.getGroupMemberInfoById(id);
+    }
 }

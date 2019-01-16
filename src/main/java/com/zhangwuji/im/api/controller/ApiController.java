@@ -57,38 +57,69 @@ public class ApiController {
 
 	@Resource
 	RedisCacheHelper redisHelper;
-	
 	@Resource
 	JavaBeanUtil javaBeanUtil;
-
 	@Resource
 	ControllerUtil controllerUtil;
+
 
     @Resource
     @Qualifier(value = "imUserService")
     private IIMUserService iOnImuserService;
-
 	@Resource
 	@Qualifier(value = "imUserGeoDataService")
 	private IIMUserGeoDataService imUserGeoDataService;
-
-
 	@Resource
 	@Qualifier(value = "IMGroupService")
 	private IIMGroupService iimGroupService;
-
 	@Resource
 	@Qualifier(value = "IMGroupMemberService")
 	private IIMGroupMemberService iimGroupMemberService;
-
 
 	
     @RequestMapping(value = "test", method = RequestMethod.GET,produces="application/json;charset=UTF-8")
     public Object test(HttpServletRequest req,HttpServletResponse rsp) {
     	rsp.addHeader("Access-Control-Allow-Origin", "*");
-
         return "helloworld!";
     }
+
+	@RequestMapping(value = "getNewFriends", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public ApiResult getNewFriends(HttpServletRequest req, HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		ApiResult returnResult = new ApiResult();
+		Map<String, Object> returnData = new HashMap<>();
+
+
+
+
+		return  returnResult;
+	}
+
+	@RequestMapping(value = "getGroupMembers", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public ApiResult getGroupMembers(HttpServletRequest req, HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		ApiResult returnResult = new ApiResult();
+		Map<String, Object> returnData = new HashMap<>();
+
+		IMUser myinfo = controllerUtil.checkToken(req);
+		if (myinfo == null) {
+			returnResult.setCode(returnResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+
+		int groupId = controllerUtil.getIntParameter(req, "groupid", 0);
+		List<Map<String, Object>> groupmemberlist = iimGroupMemberService.getGroupMemberInfoById(groupId);
+		returnData.put("memberlist", groupmemberlist);
+
+		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setData(returnData);
+		returnResult.setMessage("查询成功!");
+		return returnResult;
+	}
+
+
 	@RequestMapping(value = "getGroupList", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
 	public ApiResult getGroupList(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
@@ -138,6 +169,7 @@ public class ApiController {
 		return  returnResult;
 	}
 
+
 	@RequestMapping(value = "getGroupInfo", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
 	public ApiResult getGroupInfo(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
@@ -183,6 +215,7 @@ public class ApiController {
 		return  returnResult;
 	}
 
+
 	@RequestMapping(value = "getChatRoomList", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
 	public ApiResult getChatRoomList(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
@@ -206,7 +239,6 @@ public class ApiController {
 		returnResult.setMessage("查询成功!");
 		return  returnResult;
 	}
-
 
 
 
@@ -308,6 +340,7 @@ public class ApiController {
 		returnResult.setMessage("查询成功!");
 		return returnResult;
 	}
+
 
     
     @RequestMapping(value = "checkLogin", method = RequestMethod.POST,produces="application/json;charset=UTF-8")

@@ -16,4 +16,6 @@ import java.util.Map;
  */
 public interface IIMGroupMemberService extends IService<IMGroupMember> {
     List<Map<String, Object>> getGroupMemberList(String ids);
+
+    List<Map<String, Object>> getGroupMemberInfoById(Integer id);
 }
