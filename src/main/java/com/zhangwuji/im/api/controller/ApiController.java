@@ -103,7 +103,7 @@ public class ApiController {
 
 		IMUser myinfo = controllerUtil.checkToken(req);
 		if (myinfo == null) {
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("token验证失败!");
 			return returnResult;
@@ -113,7 +113,7 @@ public class ApiController {
 		List<Map<String, Object>> groupmemberlist = iimGroupMemberService.getGroupMemberInfoById(groupId);
 		returnData.put("memberlist", groupmemberlist);
 
-		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setCode(ApiResult.SUCCESS);
 		returnResult.setData(returnData);
 		returnResult.setMessage("查询成功!");
 		return returnResult;
@@ -129,11 +129,12 @@ public class ApiController {
 		IMUser myinfo = controllerUtil.checkToken(req);
 
 		if (myinfo == null) {
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("token验证失败!");
 			return returnResult;
 		}
+
 
 		//群信息列表。
 		List<Map<String, Object>> grouplist=iimGroupService.getMyGroupList(myinfo.getId());
@@ -163,7 +164,7 @@ public class ApiController {
 		}
 
 		returnData.put("grouplist",returnGrouplist);
-		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setCode(ApiResult.SUCCESS);
 		returnResult.setData(returnData);
 		returnResult.setMessage("查询成功!");
 		return  returnResult;
@@ -180,7 +181,7 @@ public class ApiController {
 
 
 		if (myinfo == null) {
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("token验证失败!");
 			return returnResult;
@@ -209,7 +210,7 @@ public class ApiController {
 		}
 
 		returnData.put("grouplist",returnGrouplist);
-		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setCode(ApiResult.SUCCESS);
 		returnResult.setData(returnData);
 		returnResult.setMessage("查询成功!");
 		return  returnResult;
@@ -225,7 +226,7 @@ public class ApiController {
 		IMUser myinfo=controllerUtil.checkToken(req);
 		if(myinfo==null)
 		{
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("token验证失败!");
 			return returnResult;
@@ -234,7 +235,7 @@ public class ApiController {
 
 
 		Map<String, Object>  groups=iimGroupService.getMap(new QueryWrapper<IMGroup>().eq("type",3).eq("status",0));
-		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setCode(ApiResult.SUCCESS);
 		returnResult.setData(groups);
 		returnResult.setMessage("查询成功!");
 		return  returnResult;
@@ -253,7 +254,7 @@ public class ApiController {
 		IMUser myinfo=controllerUtil.checkToken(req);
 		if(myinfo==null)
 		{
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("token验证失败!");
 			return returnResult;
@@ -335,7 +336,7 @@ public class ApiController {
 			}
 		}
 
-		returnResult.setCode(returnResult.SUCCESS);
+		returnResult.setCode(ApiResult.SUCCESS);
 		returnResult.setData(returndatalist);
 		returnResult.setMessage("查询成功!");
 		return returnResult;
@@ -358,7 +359,7 @@ public class ApiController {
 		IMUser users=iOnImuserService.getOne(new QueryWrapper<IMUser>().eq("appId",appid).eq("username",username));
 		if(users==null || users.getId()==0)
 		{
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("账号不存在!");
 			return returnResult;
@@ -367,7 +368,7 @@ public class ApiController {
 		password=DigestUtils.md5Hex(password+users.getSalt()).toLowerCase();
 		if(!users.getPassword().equals(password))
 		{
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("密码错误!");
 			return returnResult;
@@ -402,7 +403,7 @@ public class ApiController {
 
 		iOnImuserService.updateById(users);
 
-     	returnResult.setCode(returnResult.SUCCESS);
+     	returnResult.setCode(ApiResult.SUCCESS);
      	returnResult.setData(returnData);
      	returnResult.setMessage("登录成功!");
     	
@@ -418,7 +419,7 @@ public class ApiController {
 		IMUser myinfo=controllerUtil.checkToken(req);
 		if(myinfo==null)
 		{
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 			returnResult.setData(returnData);
 			returnResult.setMessage("token验证失败!");
 			return returnResult;
@@ -432,12 +433,12 @@ public class ApiController {
 		{
 			returnData.put("userinfo",userslist);
 
-			returnResult.setCode(returnResult.SUCCESS);
+			returnResult.setCode(ApiResult.SUCCESS);
 			returnResult.setData(returnData);
 		}
 		else
 		{
-			returnResult.setCode(returnResult.ERROR);
+			returnResult.setCode(ApiResult.ERROR);
 		}
 		returnResult.setMessage("查询成功!");
 		return returnResult;
@@ -466,7 +467,7 @@ public class ApiController {
 
     	serverinfo.setMsfsPrior(files_msfsprior);
     	serverinfo.setMsfsBackup(files_msfspriorbackup);
-     	returnResult.setCode(returnResult.SUCCESS);
+     	returnResult.setCode(ApiResult.SUCCESS);
      	returnResult.setData(serverinfo);
      	returnResult.setMessage("登录成功!");
 

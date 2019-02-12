@@ -30,7 +30,7 @@ public class IMWebSocketStarter {
 		String keyStoreFile = "classpath:config/ssl/imtt.b56.cn.jks";
 		String trustStoreFile = "classpath:config/ssl/imtt.b56.cn.jks";
 		String keyStorePwd = "123456";
-		serverGroupContext.useSsl(keyStoreFile, trustStoreFile, keyStorePwd);
+		//serverGroupContext.useSsl(keyStoreFile, trustStoreFile, keyStorePwd);
 	}
 
 	/**
