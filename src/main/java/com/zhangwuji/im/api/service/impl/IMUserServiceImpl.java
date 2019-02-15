@@ -26,7 +26,7 @@ import java.util.Map;
 public class IMUserServiceImpl extends ServiceImpl<IMUserMapper, IMUser> implements IIMUserService {
 
     @Resource
-    @Qualifier(value = "iOnImuserfriendsService")
+    @Qualifier(value = "IMUserFriendsService")
     private IIMUserFriendsService iOnImuserfriendsService;
 
     @Override

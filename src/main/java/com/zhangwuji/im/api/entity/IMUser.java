@@ -69,7 +69,7 @@ public class IMUser extends baseEntity implements Serializable {
     /**
      * 1男2女0未知
      */
-    private Boolean sex;
+    private int sex;
 
     /**
      * 自定义用户头像

@@ -1,10 +1,7 @@
 package com.zhangwuji.im.api.controller;
 
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -14,10 +11,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zhangwuji.im.api.common.ControllerUtil;
 import com.zhangwuji.im.api.entity.*;
-import com.zhangwuji.im.api.service.IIMGroupMemberService;
-import com.zhangwuji.im.api.service.IIMGroupService;
-import com.zhangwuji.im.api.service.IIMUserGeoDataService;
-import com.zhangwuji.im.api.service.IIMUserService;
+import com.zhangwuji.im.api.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,10 +59,10 @@ public class ApiController {
 
     @Resource
     @Qualifier(value = "imUserService")
-    private IIMUserService iOnImuserService;
+    private IIMUserService iimUserService;
 	@Resource
 	@Qualifier(value = "imUserGeoDataService")
-	private IIMUserGeoDataService imUserGeoDataService;
+	private IIMUserGeoDataService iimUserGeoDataService;
 	@Resource
 	@Qualifier(value = "IMGroupService")
 	private IIMGroupService iimGroupService;
@@ -76,23 +70,215 @@ public class ApiController {
 	@Qualifier(value = "IMGroupMemberService")
 	private IIMGroupMemberService iimGroupMemberService;
 
-	
+	@Resource
+	@Qualifier(value = "IMUserFriendsService")
+	private IIMUserFriendsService iimUserFriendsService;
+	@Resource
+	@Qualifier(value = "IMDepartService")
+	private IIMDepartService iimDepartService;
+
     @RequestMapping(value = "test", method = RequestMethod.GET,produces="application/json;charset=UTF-8")
     public Object test(HttpServletRequest req,HttpServletResponse rsp) {
     	rsp.addHeader("Access-Control-Allow-Origin", "*");
+
+		controllerUtil.sendIMSystemMessage(137,4,"FRIEND_INVITE");
+
         return "helloworld!";
     }
+
+	@RequestMapping(value = "addFriend", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public ApiResult addFriend(HttpServletRequest req, HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		ApiResult returnResult = new ApiResult();
+		Map<String, Object> returnData = new HashMap<>();
+		List<Map<String, Object>> returnFriendsList = new LinkedList<>();
+		List<Map<String, Object>> userDepartList = new LinkedList<>();
+		List<Map<String, Object>> friendsList = new LinkedList<>();
+		IMUser myinfo = controllerUtil.checkToken(req);
+		if (myinfo == null) {
+			returnResult.setCode(ApiResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+		int friduid=controllerUtil.getIntParameter(req,"friuid",0);
+		IMUserFriends imUserFriends=iimUserFriendsService.getOne(new QueryWrapper<IMUserFriends>().eq("uid",friduid).eq("friuid",myinfo.getId()));
+		if(imUserFriends==null || imUserFriends.getId()<=0)
+		{
+			IMUserFriends addFriend=new IMUserFriends();
+			addFriend.setUid(friduid);
+			addFriend.setFriuid(myinfo.getId());
+			addFriend.setFriName(myinfo.getNickname());
+			addFriend.setGroupId(1);
+			addFriend.setMessage("已通过好友请求!");
+			addFriend.setStatus(22);
+			addFriend.setUpdated(controllerUtil.timestamp2());
+			addFriend.setCreated(controllerUtil.timestamp2());
+			iimUserFriendsService.save(addFriend);
+
+			controllerUtil.sendIMSystemMessage(137,friduid,"FRIEND_INVITE");
+
+			returnResult.setCode(200);
+			returnResult.setData(null);
+			returnResult.setMessage("请求成功!");
+			return returnResult;
+		}
+		else
+		{
+			if(imUserFriends.getStatus()==1)
+			{
+				returnResult.setCode(201);
+				returnResult.setData(null);
+				returnResult.setMessage("已经是好友!");
+				return returnResult;
+			}
+			else
+			{
+				if((controllerUtil.timestamp2()-imUserFriends.getUpdated())>1000*60*60*24)
+				{
+					imUserFriends.setMessage("请求加为好友");
+					imUserFriends.setStatus(2);
+					imUserFriends.setUpdated(controllerUtil.timestamp2());
+					iimUserFriendsService.updateById(imUserFriends);
+
+					controllerUtil.sendIMSystemMessage(137,friduid,"FRIEND_INVITE");
+				}
+
+				returnResult.setCode(200);
+				returnResult.setData(null);
+				returnResult.setMessage("请求成功!");
+				return returnResult;
+			}
+
+		}
+	}
+
+
+	@RequestMapping(value = "agreeFriend", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public ApiResult agreeFriend(HttpServletRequest req, HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		ApiResult returnResult = new ApiResult();
+		Map<String, Object> returnData = new HashMap<>();
+		List<Map<String, Object>> returnFriendsList = new LinkedList<>();
+		List<Map<String, Object>> userDepartList = new LinkedList<>();
+		List<Map<String, Object>> friendsList = new LinkedList<>();
+		IMUser myinfo = controllerUtil.checkToken(req);
+		if (myinfo == null) {
+			returnResult.setCode(ApiResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+
+		int friduid=controllerUtil.getIntParameter(req,"friuid",0);
+
+		IMUserFriends imUserFriends=iimUserFriendsService.getOne(new QueryWrapper<IMUserFriends>().eq("uid",myinfo.getId()).eq("friuid",friduid));
+        if(imUserFriends==null || imUserFriends.getId()<=0)
+		{
+			returnResult.setCode(201);
+			returnResult.setData(null);
+			returnResult.setMessage("没有找到好友请求!");
+			return returnResult;
+		}
+        else
+		{
+			if(imUserFriends.getStatus()==1)
+			{
+				returnResult.setCode(201);
+				returnResult.setData(null);
+				returnResult.setMessage("已经是好友!");
+				return returnResult;
+			}
+			else
+			{
+				//更新当前记录的状态
+				imUserFriends.setMessage("请求加为好友");
+				imUserFriends.setStatus(1);
+				imUserFriends.setUpdated(controllerUtil.timestamp2());
+				iimUserFriendsService.updateById(imUserFriends);
+
+
+				//给对方加上自已的好友记录
+				IMUserFriends addFriend=new IMUserFriends();
+				addFriend.setUid(friduid);
+				addFriend.setFriuid(myinfo.getId());
+				addFriend.setFriName(myinfo.getNickname());
+				addFriend.setGroupId(1);
+				addFriend.setMessage("已通过好友请求!");
+				addFriend.setStatus(1);
+				addFriend.setUpdated(controllerUtil.timestamp2());
+				addFriend.setCreated(controllerUtil.timestamp2());
+				iimUserFriendsService.save(addFriend);
+
+				controllerUtil.sendIMSystemMessage(137,friduid,"FRIEND_AGEREE");
+
+				returnResult.setCode(200);
+				returnResult.setData(null);
+				returnResult.setMessage("请求成功!");
+				return returnResult;
+
+			}
+		}
+	}
+
+	@RequestMapping(value = "getFriends", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public ApiResult getFriends(HttpServletRequest req, HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		ApiResult returnResult = new ApiResult();
+		Map<String, Object> returnData = new HashMap<>();
+		List<Map<String, Object>> returnFriendsList = new LinkedList<>();
+		List<Map<String, Object>> userDepartList = new LinkedList<>();
+		List<Map<String, Object>> friendsList = new LinkedList<>();
+		IMUser myinfo = controllerUtil.checkToken(req);
+		if (myinfo == null) {
+			returnResult.setCode(ApiResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
+
+		returnFriendsList=iimUserFriendsService.getMyFriends(myinfo.getId());
+		userDepartList=iimDepartService.getMyAllDepart(myinfo.getId());
+		for (Map<String, Object> userMap:returnFriendsList) {
+			for (Map<String, Object> departMap:userDepartList) {
+				if(userMap.get("departmentId").toString().equals(departMap.get("departId").toString()))
+				{
+					userMap.put("departName",departMap.get("departName").toString());
+					friendsList.add(userMap);
+				}
+			}
+		}
+
+		returnData.put("friendlist",friendsList);
+		returnData.put("grouplist",userDepartList);
+
+		returnResult.setCode(ApiResult.SUCCESS);
+		returnResult.setData(returnData);
+		returnResult.setMessage("查询成功!");
+		return returnResult;
+	}
+
 
 	@RequestMapping(value = "getNewFriends", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
 	public ApiResult getNewFriends(HttpServletRequest req, HttpServletResponse rsp) {
 		rsp.addHeader("Access-Control-Allow-Origin", "*");
 		ApiResult returnResult = new ApiResult();
 		Map<String, Object> returnData = new HashMap<>();
+		List<Map<String, Object>> returnFriendsList = new LinkedList<>();
 
+		IMUser myinfo = controllerUtil.checkToken(req);
+		if (myinfo == null) {
+			returnResult.setCode(ApiResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("token验证失败!");
+			return returnResult;
+		}
 
-
-
-		return  returnResult;
+		returnFriendsList=iimUserFriendsService.getMyNewFriends(myinfo.getId());
+		returnResult.setCode(ApiResult.SUCCESS);
+		returnResult.setData(returnFriendsList);
+		returnResult.setMessage("查询成功!");
+		return returnResult;
 	}
 
 	@RequestMapping(value = "getGroupMembers", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
@@ -269,15 +455,15 @@ public class ApiController {
 		List<GeoBean> geoBeanList = new LinkedList<>();
 		List<GeoBean> pageGeoList = new LinkedList<>();
 
-		redisHelper.cacheGeo("hunan22",122.172565,37.419147,"1",13600*10);
-		redisHelper.cacheGeo("hunan22",122.172565,37.417147,"2",13600*10);
-		redisHelper.cacheGeo("hunan22",122.172565,37.415147,"3",13600*10);
-		redisHelper.cacheGeo("hunan22",122.172565,37.416147,"4",13600*10);
+		//redisHelper.cacheGeo("hunan22",113.37322,23.126153,"1",13600*10);
+		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"2",13600*10);
+		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"3",13600*10);
+		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"4",13600*10);
 		String geojson="";
 
 
 		//流程:先从数据库查找缓存。看有没有缓存数据，如果有的话，直接读取缓存数据进行查分页查找。没有缓存数据时，用redis geo里面进行搜索
-		IMUserGeoData  imUserGeoData2=imUserGeoDataService.getOne(new QueryWrapper<IMUserGeoData>().eq("uid",myinfo.getId()));
+		IMUserGeoData  imUserGeoData2=iimUserGeoDataService.getOne(new QueryWrapper<IMUserGeoData>().eq("uid",myinfo.getId()));
 		if(imUserGeoData2!=null && imUserGeoData2.getId()>0 && imUserGeoData2.getUpdated()>0 && ((controllerUtil.timestamp()-imUserGeoData2.getUpdated())<60*10))
 		{
 			geojson=imUserGeoData2.getData();
@@ -308,7 +494,7 @@ public class ApiController {
 			imUserGeoData.setLng(lng);
 
 			imUserGeoData.setUpdated(controllerUtil.timestamp());
-			imUserGeoDataService.save(imUserGeoData);
+			iimUserGeoDataService.save(imUserGeoData);
 		}
 
 		pageGeoList=javaBeanUtil.sublist(geoBeanList,page,pagesize);
@@ -320,7 +506,7 @@ public class ApiController {
 		}
 
 		String uids = StringUtils.join(userids, ",");
-		List<Map<String, Object>> userslist=iOnImuserService.getUsersInfo(uids);
+		List<Map<String, Object>> userslist=iimUserService.getUsersInfo(uids);
 
 
 		//哈哈。连环for。主要是为了排序和输出dists
@@ -342,7 +528,68 @@ public class ApiController {
 		return returnResult;
 	}
 
+	@RequestMapping(value = "reg", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
+	public ApiResult reg(HttpServletRequest req, HttpServletResponse rsp) {
+		rsp.addHeader("Access-Control-Allow-Origin", "*");
+		ApiResult returnResult = new ApiResult();
+		Map<String, Object> returnData = new HashMap<>();
+		ServerInfoEntity serverinfo = new ServerInfoEntity();
+		Map<String, Object> bmqq_plugin = new HashMap<>();
 
+		int appid = controllerUtil.getIntParameter(req,"appId",88888);
+		int outid= controllerUtil.getIntParameter(req,"outid",0);
+		String username = controllerUtil.getStringParameter(req,"username","0");
+		String password = controllerUtil.getStringParameter(req,"password","0");
+		String code =controllerUtil.getStringParameter(req,"code","0");
+		String nickname =controllerUtil.getStringParameter(req,"nickname","");
+		int salt=new Random().nextInt(8888)+1000;
+
+		if(username.length()!=11)
+		{
+			returnResult.setCode(ApiResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("请使用正确的手机号码!");
+			return returnResult;
+		}
+
+		IMUser users = iimUserService.getOne(new QueryWrapper<IMUser>().eq("appId", appid).eq("username", username));
+		if (users != null && users.getId() > 0) {
+			returnResult.setCode(ApiResult.ERROR);
+			returnResult.setData(returnData);
+			returnResult.setMessage("账号已存在!");
+			return returnResult;
+		}
+
+		users=new IMUser();
+		users.setAppId(appid);
+		users.setAvatar("http://d.lanrentuku.com/down/png/1807/if-family/if_daughter_3231126.png");
+		users.setOutId(outid);
+		users.setUsername(username);
+		users.setSalt(salt+"");
+		//对密码进行加密
+		String enPass= DigestUtils.md5Hex(password + users.getSalt()).toLowerCase();
+		users.setPassword(enPass);
+		if(nickname.equals(""))
+		{
+			nickname="cloudtalk"+salt;
+		}
+		users.setNickname(nickname);
+		users.setRealname(nickname);
+		users.setApiToken(controllerUtil.getRandomString(32));
+        users.setCreated(controllerUtil.timestamp2());
+		users.setUpdated(controllerUtil.timestamp2());
+		users.setSex(1);
+		users.setDomain("0");
+		users.setPhone(username);
+		users.setDepartId(1);
+		users.setStatus(0);
+		iimUserService.save(users);
+
+		returnResult.setCode(ApiResult.SUCCESS);
+		returnResult.setData(null);
+		returnResult.setMessage("注册成功!");
+		return returnResult;
+	}
     
     @RequestMapping(value = "checkLogin", method = RequestMethod.POST,produces="application/json;charset=UTF-8")
     public ApiResult checkLogin(HttpServletRequest req, HttpServletResponse rsp) {
@@ -356,7 +603,7 @@ public class ApiController {
 		String username=req.getParameter("username");
 		String password=req.getParameter("password");
 
-		IMUser users=iOnImuserService.getOne(new QueryWrapper<IMUser>().eq("appId",appid).eq("username",username));
+		IMUser users=iimUserService.getOne(new QueryWrapper<IMUser>().eq("appId",appid).eq("username",username));
 		if(users==null || users.getId()==0)
 		{
 			returnResult.setCode(ApiResult.ERROR);
@@ -393,6 +640,7 @@ public class ApiController {
 
 
 		Map<String, Object> returnUsers=JavaBeanUtil.convertBeanToMap(users);
+		returnUsers.put("peerId",users.getId());
 		returnUsers.remove("password");
 
     	returnData.put("token", users.getApiToken());
@@ -401,7 +649,7 @@ public class ApiController {
      	returnData.put("bqmmplugin", bmqq_plugin);
 
 
-		iOnImuserService.updateById(users);
+		iimUserService.updateById(users);
 
      	returnResult.setCode(ApiResult.SUCCESS);
      	returnResult.setData(returnData);
@@ -427,7 +675,7 @@ public class ApiController {
 
 
 		String friuid=req.getParameter("friuids");
-		List<Map<String, Object>> userslist=iOnImuserService.getUsersInfo(friuid);
+		List<Map<String, Object>> userslist=iimUserService.getUsersInfo(friuid);
 
 		if(userslist.size()>0)
 		{
@@ -477,11 +725,11 @@ public class ApiController {
 	@RequestMapping("/users/{page}/{size}")
 	public Map<String, Object> users(@PathVariable Integer page, @PathVariable Integer size) {
 		Map<String, Object> map = new HashMap<>();
-		Page<IMUser> questionStudent = iOnImuserService.getAllUserBypage(new Page<>(page, size));
+		Page<IMUser> questionStudent = iimUserService.getAllUserBypage(new Page<>(page, size));
 
-		IMUser users=iOnImuserService.getById(1);
+		IMUser users=iimUserService.getById(1);
 
-		List<Map<String, Object>> list=iOnImuserService.selectUser2();
+		List<Map<String, Object>> list=iimUserService.selectUser2();
 
 		if (questionStudent.getRecords().size() == 0) {
 			map.put("code", 400);
