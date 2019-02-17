@@ -235,19 +235,41 @@
     </repositories>
 
 	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-			</resource>
-		</resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/lib</outputDirectory>
+                            <excludeTransitive>false</excludeTransitive>
+                            <stripVersion>false</stripVersion>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
-		<plugins>
-		  <!--  <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin> -->
-            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*.properties</exclude>
+                        <exclude>**/*.xml</exclude>
+                        <exclude>**/*.yml</exclude>
+                        <exclude>static/**</exclude>
+                        <exclude>templates/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -272,58 +294,8 @@
                     </execution>
                 </executions>
             </plugin>
-            
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.10</version>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/lib</outputDirectory>
-                            <excludeTransitive>false</excludeTransitive>
-                            <stripVersion>false</stripVersion>
-                            <includeScope>runtime</includeScope>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-						</manifest>
-						<addMavenDescriptor>false</addMavenDescriptor><!-- 生成的jar中，不要包含pom.xml和pom.properties这两个文件 -->
-					</archive>
-					<finalName>${project.artifactId}</finalName>
-					<excludes>
-						<exclude>config/**/*</exclude>
-						<exclude>*.properties</exclude>
-						<exclude>*.xml</exclude>
-						<exclude>static/**</exclude>
-                        <exclude>templates/**</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-             
-             <plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
@@ -335,64 +307,48 @@
                         <configuration>
                             <target>
                                 <property name="dist">target/distribution</property>
-                                <property name="res">target/distribution/resources</property>
-                                <property name="config">target/distribution/config</property>
                                 <property name="dist-tmp">target/distribution/tmp</property>
                                 <property name="app-name">${project.artifactId}-${project.version}</property>
-                                <property name="real-app-name">${project.artifactId}</property>
                                 <mkdir dir="${dist-tmp}" />
-                                <mkdir dir="${res}" />
-                                <mkdir dir="${config}" />
                                 <copy file="target/${app-name}.jar" tofile="${dist-tmp}/${app-name}.jar" />
                                 <unzip src="${dist-tmp}/${app-name}.jar" dest="${dist-tmp}" />
                                 <delete file="${dist-tmp}/${app-name}.jar" />
-                                <move file="target/${app-name}-classes.jar" tofile="${dist}/${real-app-name}.jar"/>
+
+                                <zip destfile="${dist}/${app-name}-pages.jar">
+                                    <zipfileset dir="${dist-tmp}/META-INF" prefix="META-INF" />
+                                  <!--   <zipfileset dir="target/classes/static" prefix="static" /> -->
+                                  <!--   <zipfileset dir="target/classes/templates" prefix="templates" /> -->
+                                </zip>
+
+                                <move file="target/${app-name}-classes.jar" todir="${dist}" />
                                 <move todir="${dist}/3rd-lib">
                                     <fileset dir="target/lib" />
                                 </move>
 
                                 <delete dir="${dist-tmp}" />
 
-                                <copy todir="${res}">
-                                    <fileset dir="target/classes">
-                                        <include name="**/static/**" />
-                                        <include name="**/templates/**" />
-                                    </fileset>
-                                </copy>
-                                <copy todir="${config}">
+                                <copy todir="${dist}/config">
                                     <fileset dir="target/classes">
                                         <include name="**/*.properties" />
                                         <include name="**/*.xml" />
+                                        <include name="**/*.yml" />
                                     </fileset>
                                 </copy>
+
+                                <copy todir="${dist}">
+                                    <fileset dir="target/classes">
+                                        <include name="config/**" />
+                                    </fileset>
+                                    <fileset dir="">
+                                        <include name="*.sh" />
+                                    </fileset>
+                                </copy>
+
                             </target>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            
-			<!-- The configuration of maven-assembly-plugin -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>make-assembly</id> <!--名字任意 -->
-						<phase>package</phase>  <!-- 绑定到package生命周期阶段上 -->
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<appendAssemblyId>false</appendAssemblyId>
-							<descriptors>
-								<descriptor>script/pkg.xml</descriptor>
-							</descriptors>
-							<outputDirectory>${project.build.directory}/</outputDirectory>
-							<finalName>${project.artifactId}</finalName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+        </plugins>
+    </build>
 </project>

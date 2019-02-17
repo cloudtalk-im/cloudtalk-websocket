@@ -456,9 +456,12 @@ public class ApiController {
 		List<GeoBean> pageGeoList = new LinkedList<>();
 
 		//redisHelper.cacheGeo("hunan22",113.37322,23.126153,"1",13600*10);
-		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"2",13600*10);
-		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"3",13600*10);
-		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"4",13600*10);
+		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"2",13600*1000);
+		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"3",13600*1000);
+		redisHelper.cacheGeo("hunan22",113.37322,23.126153,"4",13600*1000);
+
+		redisHelper.cacheGeo("hunan22",lng,lat,myinfo.getId().toString(),13600*10000);
+
 		String geojson="";
 
 
@@ -471,7 +474,7 @@ public class ApiController {
 		}
 		else
 		{
-			GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResults=redisHelper.radiusGeo("hunan22",lng,lat,1000, Sort.Direction.ASC,100);
+			GeoResults<RedisGeoCommands.GeoLocation<Object>> geoResults=redisHelper.radiusGeo("hunan22",lng,lat,10000000, Sort.Direction.ASC,100);
 			List<GeoResult<RedisGeoCommands.GeoLocation<Object>>> geoResults1= geoResults.getContent();
 			for (GeoResult<RedisGeoCommands.GeoLocation<Object>> item:geoResults){
 				GeoBean geoBean=new GeoBean();
